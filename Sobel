@@ -1,0 +1,63 @@
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+import tkinter as tk
+from tkinter import filedialog
+
+# Crear una ventana raíz de Tkinter (se ocultará)
+root = tk.Tk()
+root.withdraw()  # Ocultar la ventana principal de Tkinter
+
+# Abrir el diálogo para seleccionar la imagen
+ruta_imagen = filedialog.askopenfilename(
+    title="Selecciona una imagen",
+    filetypes=[("Archivos de Imagen", "*.jpg *.jpeg *.png *.bmp *.tiff *.gif"),
+               ("Todos los archivos", "*.*")]
+)
+
+# Verificar si se seleccionó una imagen
+if not ruta_imagen:
+    print("No se seleccionó ninguna imagen. El programa se cerrará.")
+    exit()
+
+# Cargar la imagen seleccionada
+imagen = cv2.imread(ruta_imagen)
+if imagen is None:
+    print(f"No se pudo cargar la imagen desde {ruta_imagen}. Verifique la ruta y el formato.")
+    exit()
+
+# Convertir a escala de grises
+gris = cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
+
+# Aplicar filtro Sobel en dirección X
+sobelx = cv2.Sobel(gris, cv2.CV_64F, 1, 0, ksize=3)
+# Aplicar filtro Sobel en dirección Y
+sobely = cv2.Sobel(gris, cv2.CV_64F, 0, 1, ksize=3)
+
+# Calcular la magnitud del gradiente
+magnitud = np.sqrt(sobelx**2 + sobely**2)
+# Normalizar para visualización
+magnitud = np.uint8(np.absolute(magnitud) / np.max(magnitud) * 255)
+
+# Convertir imagen original de BGR a RGB para matplotlib
+imagen_rgb = cv2.cvtColor(imagen, cv2.COLOR_BGR2RGB)
+
+# Crear figura para mostrar las imágenes
+plt.figure(figsize=(12, 6))
+
+# Mostrar imagen original
+plt.subplot(1, 2, 1)
+plt.imshow(imagen_rgb)
+plt.title('Imagen Original')
+plt.axis('off')
+
+# Mostrar resultado del filtro Sobel
+plt.subplot(1, 2, 2)
+plt.imshow(magnitud, cmap='gray')
+plt.title('Filtro Sobel (Detección de Bordes)')
+plt.axis('off')
+
+plt.tight_layout()
+plt.show()
+
+print(f"Filtro Sobel aplicado con éxito a la imagen: {ruta_imagen}")
